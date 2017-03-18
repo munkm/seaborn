@@ -542,13 +542,13 @@ class _BoxPlotter(_CategoricalPlotter):
 class _ViolinPlotter(_CategoricalPlotter):
 
     def __init__(self, x, y, hue, data, order, hue_order,
-                 bw, cut, scale, scale_hue, gridsize,
+                 bw, cut, scale, scale_hue, gridsize, log_bins,
                  width, inner, split, dodge, orient, linewidth,
                  color, palette, saturation):
 
         self.establish_variables(x, y, hue, data, orient, order, hue_order)
         self.establish_colors(color, palette, saturation)
-        self.estimate_densities(bw, cut, scale, scale_hue, gridsize)
+        self.estimate_densities(bw, cut, scale, scale_hue, gridsize, log_bins)
 
         self.gridsize = gridsize
         self.width = width
@@ -571,7 +571,7 @@ class _ViolinPlotter(_CategoricalPlotter):
             linewidth = mpl.rcParams["lines.linewidth"]
         self.linewidth = linewidth
 
-    def estimate_densities(self, bw, cut, scale, scale_hue, gridsize):
+    def estimate_densities(self, bw, cut, scale, scale_hue, gridsize, log_bins):
         """Find the support and density for all of the data."""
         # Initialize data structures to keep track of plotting data
         if self.hue_names is None:
@@ -616,7 +616,8 @@ class _ViolinPlotter(_CategoricalPlotter):
                 kde, bw_used = self.fit_kde(kde_data, bw)
 
                 # Determine the support grid and get the density over it
-                support_i = self.kde_support(kde_data, bw_used, cut, gridsize)
+                support_i = self.kde_support(kde_data, bw_used, cut, gridsize,
+                                             log_bins)
                 density_i = kde.evaluate(support_i)
 
                 # Update the data structures with these results
@@ -666,7 +667,7 @@ class _ViolinPlotter(_CategoricalPlotter):
 
                     # Determine the support grid and get the density over it
                     support_ij = self.kde_support(kde_data, bw_used,
-                                                  cut, gridsize)
+                                                  cut, gridsize, log_bins)
                     density_ij = kde.evaluate(support_ij)
 
                     # Update the data structures with these results
@@ -719,11 +720,16 @@ class _ViolinPlotter(_CategoricalPlotter):
 
         return kde, bw_used
 
-    def kde_support(self, x, bw, cut, gridsize):
+    def kde_support(self, x, bw, cut, gridsize, log_bins):
         """Define a grid of support for the violin."""
         support_min = x.min() - bw * cut
         support_max = x.max() + bw * cut
-        return np.linspace(support_min, support_max, gridsize)
+        if log_bins == True:
+            support_min = np.log10(support_min)
+            support_max = np.log10(support_max)
+            return np.logspace(support_min, support_max, gridsize)
+        else:
+            return np.linspace(support_min, support_max, gridsize)
 
     def scale_area(self, density, max_density, scale_hue):
         """Scale the relative area under the KDE curve.
@@ -2345,8 +2351,8 @@ boxplot.__doc__ = dedent("""\
 
 def violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
                bw="scott", cut=2, scale="area", scale_hue=True, gridsize=100,
-               width=.8, inner="box", split=False, dodge=True, orient=None,
-               linewidth=None, color=None, palette=None, saturation=.75,
+               log_bins=False, width=.8, inner="box", split=False, dodge=True,
+               orient=None, linewidth=None, color=None, palette=None, saturation=.75,
                ax=None, **kwargs):
 
     # Try to handle broken backwards-compatability
@@ -2381,7 +2387,7 @@ def violinplot(x=None, y=None, hue=None, data=None, order=None, hue_order=None,
         warnings.warn(msg, UserWarning)
 
     plotter = _ViolinPlotter(x, y, hue, data, order, hue_order,
-                             bw, cut, scale, scale_hue, gridsize,
+                             bw, cut, scale, scale_hue, gridsize, log_bins,
                              width, inner, split, dodge, orient, linewidth,
                              color, palette, saturation)
 
@@ -2436,6 +2442,9 @@ violinplot.__doc__ = dedent("""\
     gridsize : int, optional
         Number of points in the discrete grid used to compute the kernel
         density estimate.
+    log_bins : bool, optional
+        Choose whether to sample and calculate the density data in logarithmic
+        bin widths. By default the bins will be linear.
     {width}
     inner : {{"box", "quartile", "point", "stick", None}}, optional
         Representation of the datapoints in the violin interior. If ``box``,

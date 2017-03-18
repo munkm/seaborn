@@ -856,8 +856,8 @@ class TestViolinPlotter(CategoricalFixture):
     default_kws = dict(x=None, y=None, hue=None, data=None,
                        order=None, hue_order=None,
                        bw="scott", cut=2, scale="area", scale_hue=True,
-                       gridsize=100, width=.8, inner="box", split=False,
-                       dodge=True, orient=None, linewidth=None,
+                       gridsize=100, log_bins=False, width=.8, inner="box",
+                       split=False, dodge=True, orient=None, linewidth=None,
                        color=None, palette=None, saturation=.75)
 
     def test_split_error(self):
@@ -876,7 +876,7 @@ class TestViolinPlotter(CategoricalFixture):
         y = self.rs.randn(3)
         y[-1] = np.nan
         p.establish_variables(x, y)
-        p.estimate_densities("scott", 2, "area", True, 20)
+        p.estimate_densities("scott", 2, "area", True, 20, False)
 
         nt.assert_equal(len(p.support[0]), 20)
         nt.assert_equal(len(p.support[1]), 0)
@@ -886,7 +886,7 @@ class TestViolinPlotter(CategoricalFixture):
 
         nt.assert_equal(p.density[1].item(), 1)
 
-        p.estimate_densities("scott", 2, "count", True, 20)
+        p.estimate_densities("scott", 2, "count", True, 20, False)
         nt.assert_equal(p.density[1].item(), 0)
 
         x = ["a"] * 4 + ["b"] * 2
@@ -894,7 +894,7 @@ class TestViolinPlotter(CategoricalFixture):
         h = ["m", "n"] * 2 + ["m"] * 2
 
         p.establish_variables(x, y, h)
-        p.estimate_densities("scott", 2, "area", True, 20)
+        p.estimate_densities("scott", 2, "area", True, 20, False)
 
         nt.assert_equal(len(p.support[1][0]), 20)
         nt.assert_equal(len(p.support[1][1]), 0)
@@ -904,7 +904,7 @@ class TestViolinPlotter(CategoricalFixture):
 
         nt.assert_equal(p.density[1][1].item(), 1)
 
-        p.estimate_densities("scott", 2, "count", False, 20)
+        p.estimate_densities("scott", 2, "count", False, 20, False)
         nt.assert_equal(p.density[1][1].item(), 0)
 
     def test_single_observation(self):
@@ -914,7 +914,7 @@ class TestViolinPlotter(CategoricalFixture):
         x = ["a", "a", "b"]
         y = self.rs.randn(3)
         p.establish_variables(x, y)
-        p.estimate_densities("scott", 2, "area", True, 20)
+        p.estimate_densities("scott", 2, "area", True, 20, False)
 
         nt.assert_equal(len(p.support[0]), 20)
         nt.assert_equal(len(p.support[1]), 1)
@@ -924,7 +924,7 @@ class TestViolinPlotter(CategoricalFixture):
 
         nt.assert_equal(p.density[1].item(), 1)
 
-        p.estimate_densities("scott", 2, "count", True, 20)
+        p.estimate_densities("scott", 2, "count", True, 20, False)
         nt.assert_equal(p.density[1].item(), .5)
 
         x = ["b"] * 4 + ["a"] * 3
@@ -932,7 +932,7 @@ class TestViolinPlotter(CategoricalFixture):
         h = (["m", "n"] * 4)[:-1]
 
         p.establish_variables(x, y, h)
-        p.estimate_densities("scott", 2, "area", True, 20)
+        p.estimate_densities("scott", 2, "area", True, 20, False)
 
         nt.assert_equal(len(p.support[1][0]), 20)
         nt.assert_equal(len(p.support[1][1]), 1)
@@ -942,7 +942,7 @@ class TestViolinPlotter(CategoricalFixture):
 
         nt.assert_equal(p.density[1][1].item(), 1)
 
-        p.estimate_densities("scott", 2, "count", False, 20)
+        p.estimate_densities("scott", 2, "count", False, 20, False)
         nt.assert_equal(p.density[1][1].item(), .5)
 
     def test_dwidth(self):
