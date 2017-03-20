@@ -2443,8 +2443,9 @@ violinplot.__doc__ = dedent("""\
         Number of points in the discrete grid used to compute the kernel
         density estimate.
     log_bins : bool, optional
-        Choose whether to sample and calculate the density data in logarithmic
-        bin widths. By default the bins will be linear.
+        Choose whether to sample and calculate the kernel density using a grid
+        with logarithmic bin widths. By default, the density will be calculated
+        on a linear grid.
     {width}
     inner : {{"box", "quartile", "point", "stick", None}}, optional
         Representation of the datapoints in the violin interior. If ``box``,
